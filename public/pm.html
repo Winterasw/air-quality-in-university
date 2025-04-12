@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Quality in University</title>
+    <link rel="stylesheet" href="pm.css">
+    <link rel="stylesheet" href="navbar.css">
+    <link rel="icon" href="./png/logo.png">
+</head>
+
+<body>
+    <header>
+        <div class="header-left">
+            <a href="index.html"><img class="nev-logo" src="./png/logo.png"></a>
+            <h1>Dark Weather</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="contact.html">Contact us</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="container">
+            <h2>PM <br> Sripatum University.</h2>
+
+            <section class="weather-container">
+
+                <div class="weather-card">
+                    <h3>PM2.5</h3>
+                    <img src="./png/pm25.png" alt="PM2.5">
+                    <p>
+                        <span id="pm2_5">Loading...</span>
+                        <span id="pm2_5Unit">µg/m³</span>
+                    </p>
+                </div>
+                <div class="weather-card">
+                    <h3>PM10</h3>
+                    <img src="./png/pm25.png" alt="PM10">
+                    <p>
+                        <span id="pm10">Loading...</span>
+                        <span id="pm10Unit">µg/m³</span>
+                    </p>
+                </div>
+                <div class="weather-card">
+                    <h3>PM1.0</h3>
+                    <img src="./png/pm25.png" alt="PM1_0">
+                    <p>
+                        <span id="pm1_0">Loading...</span>
+                        <span id="pm1_0Unit">µg/m³</span>
+                    </p>
+                </div>
+                <div class="weather-card">
+                    <h3>CO</h3>
+                    <img src="./png/CO.png" alt="CO">
+                    <p>
+                        <span id="co">Loading...</span>
+                        <span id="coUnit">ppm</span>
+                    </p>
+                </div>
+                <div class="weather-card">
+                    <h3>CO2</h3>
+                    <img src="./png/CO2.png" alt="CO2">
+                    <p>
+                        <span id="co2">Loading...</span>
+                        <span id="co2Unit">ppm</span>
+                    </p>
+                </div>
+
+                <div class="weather-card">
+                    <h3>HCHO</h3>
+                    <img src="./png/hcho.png" alt="HCHO">
+                    <p>
+                        <span id="hcho">Loading...</span>
+                        <span id="hchoUnit">ppm</span>
+                    </p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+        import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDRjCPuytxekjhUpXdB1j1yuTD2EgPbK9E",
+            authDomain: "air-quality-in-university.firebaseapp.com",
+            databaseURL: "https://air-quality-in-university-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "air-quality-in-university",
+            storageBucket: "air-quality-in-university.firebasestorage.app",
+            messagingSenderId: "109091581495",
+            appId: "1:109091581495:web:c2cc0654289aeb5027d9b2",
+            measurementId: "G-VF0Q6Y31N0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase();
+
+        function FindSensors() {
+            const coElement = document.getElementById("co");
+            const co2Element = document.getElementById("co2");
+            const hchoElement = document.getElementById("hcho");
+            const pm10Element = document.getElementById("pm10");
+            const pm2_5Element = document.getElementById("pm2_5");
+            const pm1_0Element = document.getElementById("pm1_0");
+
+            const dbref = ref(db);
+            get(child(dbref, "/realtime/")).then((snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    coElement.textContent = data.co;
+                    co2Element.textContent = data.co2;
+                    hchoElement.textContent = data.hcho;
+                    pm10Element.textContent = data.pm10;
+                    pm2_5Element.textContent = data.pm2_5;
+                    pm1_0Element.textContent = data.pm1_0;
+                } else {
+                    coElement.textContent = "Data not found";
+                    co2Element.textContent = "Data not found";
+                    hchoElement.textContent = "Data not found";
+                    pm10Element.textContent = "Data not found";
+                    pm2_5Element.textContent = "Data not found";
+                    pm1_0Element.textContent = "Data not found";
+
+                }
+            })
+                .catch((error) => {
+                    console.error("Error fetching data:", error);
+                    tempElement.textContent = "Error";
+                    humidityElement.textContent = "Error";
+                    airpressureElement.textContent = "Error";
+                    coElement.textContent = "Error";
+                    co2Element.textContent = "Error";
+                    hchoElement.textContent = "Error";
+                    pm10Element.textContent = "Error";
+                    pm2_5Element.textContent = "Error";
+                    pm1_0Element.textContent = "Error";
+                    windSpeedElement.textContent = "Error";
+                });
+        }
+
+        window.onload = FindSensors();
+    </script>
+</body>
+
+</html>

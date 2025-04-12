@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Quality in University</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="navbar.css">
+    <link rel="icon" href="./png/logo.png">
+</head>
+
+<body>
+    <header>
+        <div class="header-left">
+            <a href="index.html"><img class="nev-logo" src="./png/logo.png"></a>
+            <h1>Dark Weather</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="contact.html">Contact us</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="container">
+            <h2>View weather conditions throughout <br> Sripatum University.</h2>
+            <div class="location">
+                <img src="https://img.icons8.com/ios-filled/50/000000/marker.png" width="16" />
+                <span> Sripatum University </span>
+            </div>
+            <div class="cards1">
+                <a class="card-link" href="pm.html">
+                    <div class="card">
+                        <div class="icon-card">
+                            <img src="https://img.icons8.com/fluency/96/000000/fog-day.png" alt="PM2.5">
+                        </div>
+                        <h2>Air quality</h2>
+                        <div>
+                            <h4>PM2.5</h4>
+                            <span class="card-text" id="pm2_5">Loading...</span>
+                            <span class="card-text"> µg/m³</span>
+                        </div>
+                        <p id="windSpeed">wind speed : Loading...</p>
+                        <p id="dustInfo">Loading...</p>
+
+                    </div>
+                </a>
+                <a class="card-link" href="weather.html">
+                    <div class="card">
+                        <div class="icon-card">
+                            <img src="https://img.icons8.com/fluency/96/000000/sun.png" alt="Temperature">
+                        </div>
+                        <h2>Weather</h2>
+                        <div class="temp">
+                            <span class="card-temp" id="temp">Loading...</span>
+                            <span class="card-temp">°C</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="cards2">
+                <div class="card">
+                    <a class="card-link" href="">
+                        <h2>Forecast</h2>
+                        <div class="forecast-container" id="predict_container"></div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+        import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDRjCPuytxekjhUpXdB1j1yuTD2EgPbK9E",
+            authDomain: "air-quality-in-university.firebaseapp.com",
+            databaseURL: "https://air-quality-in-university-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "air-quality-in-university",
+            storageBucket: "air-quality-in-university.firebasestorage.app",
+            messagingSenderId: "109091581495",
+            appId: "1:109091581495:web:c2cc0654289aeb5027d9b2",
+            measurementId: "G-VF0Q6Y31N0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase();
+
+        function updateDustInfo(pm2_5Value) {
+            const dustInfoElement = document.getElementById('dustInfo');
+            if (pm2_5Value !== null && !isNaN(pm2_5Value)) {
+                if (pm2_5Value < 25) {
+                    dustInfoElement.textContent = "Good air quality.";
+                } else if (pm2_5Value < 50) {
+                    dustInfoElement.textContent = "Moderate air quality.";
+                } else if (pm2_5Value < 100) {
+                    dustInfoElement.textContent = "Unhealthy for sensitive groups.";
+                } else if (pm2_5Value < 150) {
+                    dustInfoElement.textContent = "Unhealthy.";
+                } else if (pm2_5Value < 200) {
+                    dustInfoElement.textContent = "Very unhealthy.";
+                } else {
+                    dustInfoElement.textContent = "Hazardous.";
+                }
+            } else {
+                dustInfoElement.textContent = "Data not available.";
+            }
+        }
+
+        function FindSensors() {
+            const tempElement = document.getElementById("temp");
+            const pm2_5Element = document.getElementById("pm2_5");
+            const windSpeedElement = document.getElementById('windSpeed');
+
+            const dbref = ref(db);
+            get(child(dbref, "/realtime/")).then((snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    tempElement.textContent = data.temp;
+                    pm2_5Element.textContent = data.pm2_5;
+                    windSpeedElement.textContent = "wind speed : " + (data.windspeed) + " km";
+                    updateDustInfo(parseFloat(data.pm2_5))
+                } else {
+                    tempElement.textContent = "Data not found";
+                    pm2_5Element.textContent = "Data not found";
+                    windSpeedElement.textContent = "Data not found";
+                    updateDustInfo(null);
+                }
+            })
+                .catch((error) => {
+                    console.error("Error fetching data:", error);
+                    tempElement.textContent = "Error";
+                    pm2_5Element.textContent = "Error";
+                    windSpeedElement.textContent = "Error";
+                    updateDustInfo(null);
+                });
+        }
+
+        function FindPredict() {
+            const predictContainer = document.getElementById("predict_container");
+            const dbref = ref(db);
+
+            const today = new Date();
+
+            for (let i = 0; i <= 6; i++) {
+                get(child(dbref, `/predict/${i}`)).then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+
+                        const predictItem = document.createElement("div");
+                        predictItem.className = "forecast-item";
+
+                        const forecastDate = new Date();
+                        forecastDate.setDate(today.getDate() + i);
+                        const date = forecastDate.getDate();
+                        const month = forecastDate.toLocaleString('default', { month: 'short' }); // Jan, Feb, Mar...
+
+                        // เพิ่มข้อมูลในแต่ละช่อง
+                        predictItem.innerHTML = `
+                    <h4>${date} ${month}</h4>
+                    <p>${data.temp}°C</p>
+                `;
+
+                        predictContainer.appendChild(predictItem);
+                    }
+                }).catch((error) => {
+                    console.error(`Error fetching /predict/${i}`, error);
+                });
+            }
+        }
+        window.onload = () => {
+            FindSensors();
+            FindPredict();
+
+        }
+    </script>
+</body>
+
+</html>
